@@ -6,7 +6,7 @@
  * It provides methods to access and validate address components, as well as determine the
  * validity and usability of addresses for different purposes.
  *
- * @package     ArrayPress/Utils
+ * @package     ArrayPress\Google\AddressValidation
  * @copyright   Copyright (c) 2024, ArrayPress Limited
  * @license     GPL2+
  * @version     1.0.0

@@ -2,7 +2,7 @@
 /**
  * Google Address Validation API Client Class
  *
- * @package     ArrayPress/Utils
+ * @package     ArrayPress\Google\AddressValidation
  * @copyright   Copyright (c) 2024, ArrayPress Limited
  * @license     GPL2+
  * @version     1.0.0
