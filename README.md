@@ -35,19 +35,19 @@ composer require arraypress/google-address-validation
 use ArrayPress\Google\AddressValidation\Client;
 
 // Initialize client with your API key
-$client = new Client('your-google-api-key');
+$client = new Client( 'your-google-api-key' );
 
 // Validate an address
-$result = $client->validate('1600 Amphitheatre Parkway, Mountain View, CA');
-if (!is_wp_error($result)) {
+$result = $client->validate( '1600 Amphitheatre Parkway, Mountain View, CA' );
+if ( ! is_wp_error( $result ) ) {
     // Check if address is verified
-    if ($result->is_verified()) {
+    if ( $result->is_verified() ) {
         // Get standardized address
         $address = $result->get_standardized_address();
         echo "Formatted Address: {$address['formatted_address']}\n";
         
         // Get coordinates
-        if ($geocode = $result->get_geocode()) {
+        if ( $geocode = $result->get_geocode() ) {
             echo "Latitude: {$geocode['latitude']}\n";
             echo "Longitude: {$geocode['longitude']}\n";
         }
@@ -67,7 +67,7 @@ $result = $client->validate(
     true // Enable USPS validation
 );
 
-if (!is_wp_error($result)) {
+if  ( ! is_wp_error( $result ) ) {
     $usps_data = $result->get_usps_data();
     // Access USPS-specific data
 }
@@ -77,7 +77,7 @@ if (!is_wp_error($result)) {
 
 ```php
 $result = $client->validate('123 Business Street, Anytown, USA');
-if (!is_wp_error($result)) {
+if ( ! is_wp_error( $result ) ) {
     if ($result->is_residential()) {
         echo "This is a residential address\n";
     } elseif ($result->is_po_box()) {
@@ -92,7 +92,7 @@ if (!is_wp_error($result)) {
 
 ```php
 $result = $client->validate('1600 Amphitheatre Parkway, Mountain View, CA');
-if (!is_wp_error($result)) {
+if ( ! is_wp_error( $result ) ) {
     $components = $result->get_standardized_address();
     echo "Street: {$components['street_number']} {$components['street_name']}\n";
     echo "City: {$components['locality']}\n";
@@ -106,7 +106,7 @@ if (!is_wp_error($result)) {
 
 ```php
 // Initialize with custom cache duration (1 hour = 3600 seconds)
-$client = new Client('your-api-key', true, 3600);
+$client = new Client( 'your-api-key', true, 3600 );
 
 // Results will be cached
 $result = $client->validate('1600 Amphitheatre Parkway, Mountain View, CA');
@@ -127,31 +127,60 @@ $client->clear_cache();
 
 ### Response Methods
 
-#### Validation Information
-* `get_verification_status()`: Get verification status
-* `is_verified()`: Check if address is verified
-* `get_issues()`: Get validation issues
+#### Validation Methods
+* `check_validity()`: Get detailed validation analysis
+* `is_fully_validated()`: Check if address is completely validated
+* `is_high_confidence()`: Check if address has high confidence validation
+* `is_minimal_valid()`: Check if address meets minimal validation requirements
+* `is_standardized()`: Check if address is in standard format
+* `is_exact_match()`: Check if address is an exact match without inferences
+* `is_verification_needed()`: Check if address needs additional verification
+* `is_deliverable()`: Check if address is deliverable (USPS data for US addresses)
+* `is_shippable()`: Check if address is valid for shipping
+* `is_valid_landmark()`: Check if address is a valid landmark/POI
+* `is_us_address()`: Check if address is in the United States
+* `has_minimal_components()`: Check if address has required components
 
-#### Address Information
-* `get_formatted_address()`: Get full formatted address
-* `get_standardized_address()`: Get all components in structured format
-* `get_validated_address()`: Get raw validated address data
-* `get_geocode()`: Get coordinates if available
-
-#### Address Components
-* `get_street_number()`: Get street number
-* `get_street_name()`: Get street name
-* `get_locality()`: Get city/locality
-* `get_administrative_area()`: Get state/province
-* `get_postal_code()`: Get postal code
-* `get_country()`: Get country code
-
-#### Additional Information
-* `get_metadata()`: Get address metadata
+#### Address Properties
+* `is_business()`: Check if address is a business location
 * `is_residential()`: Check if address is residential
 * `is_po_box()`: Check if address is a PO Box
-* `get_usps_data()`: Get USPS data if available
-* `get_place_id()`: Get Google Place ID if available
+* `is_active()`: Check if address is active (USPS)
+* `is_vacant()`: Check if address is vacant (USPS)
+* `is_commercial_mail_receiver()`: Check if address is a CMRA (USPS)
+
+#### Basic Example
+```php
+use ArrayPress\Google\AddressValidation\Client;
+
+// Initialize client
+$client = new Client('your-google-api-key');
+
+// Validate an address
+$result = $client->validate('1600 Amphitheatre Parkway, Mountain View, CA');
+if ( ! is_wp_error( $result ) ) {
+    // Get detailed validation status
+    $validity = $result->check_validity();
+    
+    if ($validity['is_valid']) {
+        echo "Confidence Level: {$validity['confidence_level']}\n";
+        
+        // Check specific validation aspects
+        if ($result->is_high_confidence()) {
+            echo "High confidence validation\n";
+        }
+        
+        if ($result->is_shippable()) {
+            echo "Valid shipping address\n";
+        }
+    } else {
+        echo "Validation Issues:\n";
+        foreach ($validity['issues'] as $issue) {
+            echo "- $issue\n";
+        }
+    }
+}
+```
 
 ## Use Cases
 

@@ -246,6 +246,57 @@ class Response {
 	}
 
 	/**
+	 * Get the primary type/classification of the address
+	 *
+	 * @return string Returns one of: 'residential', 'business', 'po_box', 'landmark', 'unknown'
+	 */
+	public function get_address_type(): string {
+		// Check PO Box first as it's most specific
+		if ( $this->is_po_box() ) {
+			return 'po_box';
+		}
+
+		// Check if it's a valid landmark
+		if ( $this->is_valid_landmark() ) {
+			return 'landmark';
+		}
+
+		// Check residential vs business
+		if ( $this->is_residential() ) {
+			return 'residential';
+		}
+
+		if ( $this->is_business() ) {
+			return 'business';
+		}
+
+		// If no specific type is determined
+		return 'unknown';
+	}
+
+	/**
+	 * Get a human-readable description of the address type
+	 *
+	 * @return string Translated description of the address type
+	 */
+	public function get_address_type_label(): string {
+		$type = $this->get_address_type();
+
+		switch ( $type ) {
+			case 'residential':
+				return __( 'Residential Address', 'arraypress' );
+			case 'business':
+				return __( 'Business Address', 'arraypress' );
+			case 'po_box':
+				return __( 'PO Box', 'arraypress' );
+			case 'landmark':
+				return __( 'Landmark/Point of Interest', 'arraypress' );
+			default:
+				return __( 'Unknown Address Type', 'arraypress' );
+		}
+	}
+
+	/**
 	 * Get coordinates
 	 *
 	 * Returns an array containing latitude and longitude
@@ -577,13 +628,13 @@ class Response {
 		$issues = [];
 
 		if ( ! $this->is_address_complete() ) {
-			$issues[] = __( 'Address is incomplete', 'arraypress-address-validation' );
+			$issues[] = __( 'Address is incomplete', 'arraypress' );
 
 			$missing = $this->get_missing_component_types();
 			if ( ! empty( $missing ) ) {
 				$issues[] = sprintf(
 				/* translators: %s: comma-separated list of missing components */
-					__( 'Missing components: %s', 'arraypress-address-validation' ),
+					__( 'Missing components: %s', 'arraypress' ),
 					implode( ', ', $missing )
 				);
 			}
@@ -593,17 +644,17 @@ class Response {
 			$unconfirmed = $this->get_unconfirmed_component_types();
 			$issues[]    = sprintf(
 			/* translators: %s: comma-separated list of unconfirmed components */
-				__( 'Has unconfirmed components: %s', 'arraypress-address-validation' ),
+				__( 'Has unconfirmed components: %s', 'arraypress' ),
 				implode( ', ', $unconfirmed )
 			);
 		}
 
 		if ( $this->has_inferred_components() ) {
-			$issues[] = __( 'Contains inferred components', 'arraypress-address-validation' );
+			$issues[] = __( 'Contains inferred components', 'arraypress' );
 		}
 
 		if ( $this->has_replaced_components() ) {
-			$issues[] = __( 'Contains replaced components', 'arraypress-address-validation' );
+			$issues[] = __( 'Contains replaced components', 'arraypress' );
 		}
 
 		return $issues;
@@ -689,10 +740,15 @@ class Response {
 	 * @return bool True if deliverable
 	 */
 	public function is_deliverable(): bool {
-		return $this->get_usps_data() !== null &&
-		       $this->get_dpv_confirmation() === self::USPS_CONFIRMED &&
-		       $this->is_active() &&
-		       ! $this->is_vacant();
+		// If we have USPS data
+		if ( $this->get_usps_data() !== null ) {
+			return $this->get_dpv_confirmation() === self::USPS_CONFIRMED;
+		}
+
+		// For non-USPS addresses
+		return $this->is_address_complete() &&
+		       ! $this->has_unconfirmed_components() &&
+		       $this->get_geocode() !== null;
 	}
 
 	/**
@@ -724,13 +780,16 @@ class Response {
 	 * @return bool True if shippable
 	 */
 	public function is_shippable(): bool {
+		// If we have USPS data
 		if ( $this->get_usps_data() !== null ) {
 			return $this->is_deliverable();
 		}
 
-		return $this->is_address_complete() &&
-		       ! $this->has_unconfirmed_components() &&
-		       $this->has_minimal_components();
+		// For non-USPS addresses, check if we have the minimum required components
+		return $this->get_postal_code() !== null &&
+		       $this->get_locality() !== null &&
+		       ! empty( $this->get_address_lines() ) &&
+		       ! $this->has_unconfirmed_components();
 	}
 
 	/**
