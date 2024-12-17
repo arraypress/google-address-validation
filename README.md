@@ -76,11 +76,11 @@ if  ( ! is_wp_error( $result ) ) {
 ### Address Type Detection
 
 ```php
-$result = $client->validate('123 Business Street, Anytown, USA');
+$result = $client->validate( '123 Business Street, Anytown, USA' );
 if ( ! is_wp_error( $result ) ) {
-    if ($result->is_residential()) {
+    if ( $result->is_residential() ) {
         echo "This is a residential address\n";
-    } elseif ($result->is_po_box()) {
+    } elseif ( $result->is_po_box() ) {
         echo "This is a PO Box\n";
     } else {
         echo "This is likely a commercial address\n";
@@ -91,7 +91,7 @@ if ( ! is_wp_error( $result ) ) {
 ### Working with Address Components
 
 ```php
-$result = $client->validate('1600 Amphitheatre Parkway, Mountain View, CA');
+$result = $client->validate( '1600 Amphitheatre Parkway, Mountain View, CA' );
 if ( ! is_wp_error( $result ) ) {
     $components = $result->get_standardized_address();
     echo "Street: {$components['street_number']} {$components['street_name']}\n";
@@ -109,10 +109,10 @@ if ( ! is_wp_error( $result ) ) {
 $client = new Client( 'your-api-key', true, 3600 );
 
 // Results will be cached
-$result = $client->validate('1600 Amphitheatre Parkway, Mountain View, CA');
+$result = $client->validate( '1600 Amphitheatre Parkway, Mountain View, CA' );
 
 // Clear specific cache
-$client->clear_cache('validate_1600 Amphitheatre Parkway, Mountain View, CA');
+$client->clear_cache( 'validate_1600 Amphitheatre Parkway, Mountain View, CA' );
 
 // Clear all validation caches
 $client->clear_cache();
@@ -122,8 +122,8 @@ $client->clear_cache();
 
 ### Client Methods
 
-* `validate($address, $region_code = '', $enable_usps = false, $previous_address = false)`: Validate an address
-* `clear_cache($identifier = null)`: Clear cached responses
+* `validate( $address, $region_code = '', $enable_usps = false, $previous_address = false)`: Validate an address
+* `clear_cache( $identifier = null)`: Clear cached responses
 
 ### Response Methods
 
@@ -154,28 +154,28 @@ $client->clear_cache();
 use ArrayPress\Google\AddressValidation\Client;
 
 // Initialize client
-$client = new Client('your-google-api-key');
+$client = new Client( 'your-google-api-key' );
 
 // Validate an address
-$result = $client->validate('1600 Amphitheatre Parkway, Mountain View, CA');
+$result = $client->validate( '1600 Amphitheatre Parkway, Mountain View, CA' );
 if ( ! is_wp_error( $result ) ) {
     // Get detailed validation status
     $validity = $result->check_validity();
     
-    if ($validity['is_valid']) {
+    if ( $validity['is_valid'] ) {
         echo "Confidence Level: {$validity['confidence_level']}\n";
         
         // Check specific validation aspects
-        if ($result->is_high_confidence()) {
+        if ( $result->is_high_confidence() ) {
             echo "High confidence validation\n";
         }
         
-        if ($result->is_shippable()) {
+        if ( $result->is_shippable() ) {
             echo "Valid shipping address\n";
         }
     } else {
         echo "Validation Issues:\n";
-        foreach ($validity['issues'] as $issue) {
+        foreach ( $validity['issues'] as $issue ) {
             echo "- $issue\n";
         }
     }
