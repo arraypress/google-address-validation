@@ -51,6 +51,18 @@ class Client {
 	private int $cache_expiration;
 
 	/**
+	 * Validation options
+	 *
+	 * @var array
+	 */
+	private array $options = [
+		'enable_usps'       => false,
+		'language_options'  => null,
+		'previous_response' => null,
+		'session_token'     => null
+	];
+
+	/**
 	 * Initialize the Address Validation client
 	 *
 	 * @param string $api_key          API key for Google Address Validation
@@ -64,36 +76,219 @@ class Client {
 	}
 
 	/**
+	 * Set API key
+	 *
+	 * @param string $api_key The API key to use
+	 *
+	 * @return self
+	 */
+	public function set_api_key( string $api_key ): self {
+		$this->api_key = $api_key;
+
+		return $this;
+	}
+
+	/**
+	 * Get API key
+	 *
+	 * @return string
+	 */
+	public function get_api_key(): string {
+		return $this->api_key;
+	}
+
+	/**
+	 * Set cache status
+	 *
+	 * @param bool $enable Whether to enable caching
+	 *
+	 * @return self
+	 */
+	public function set_cache_enabled( bool $enable ): self {
+		$this->enable_cache = $enable;
+
+		return $this;
+	}
+
+	/**
+	 * Get cache status
+	 *
+	 * @return bool
+	 */
+	public function is_cache_enabled(): bool {
+		return $this->enable_cache;
+	}
+
+	/**
+	 * Set cache expiration time
+	 *
+	 * @param int $seconds Cache expiration time in seconds
+	 *
+	 * @return self
+	 */
+	public function set_cache_expiration( int $seconds ): self {
+		$this->cache_expiration = $seconds;
+
+		return $this;
+	}
+
+	/**
+	 * Get cache expiration time in seconds
+	 *
+	 * @return int
+	 */
+	public function get_cache_expiration(): int {
+		return $this->cache_expiration;
+	}
+
+	/**
+	 * Enable or disable USPS CASS validation
+	 *
+	 * @param bool $enable Whether to enable USPS CASS validation
+	 *
+	 * @return self
+	 */
+	public function set_usps( bool $enable = true ): self {
+		$this->options['enable_usps'] = $enable;
+
+		return $this;
+	}
+
+	/**
+	 * Check if USPS CASS validation is enabled
+	 *
+	 * @return bool
+	 */
+	public function get_usps(): bool {
+		return (bool) $this->options['enable_usps'];
+	}
+
+	/**
+	 * Set language options for validation
+	 *
+	 * @param array|string $options Language options array or language code
+	 *
+	 * @return self
+	 */
+	public function set_language_options( $options ): self {
+		if ( is_string( $options ) ) {
+			$options = [ 'languageCode' => $options ];
+		}
+		$this->options['language_options'] = $options;
+
+		return $this;
+	}
+
+	/**
+	 * Get current language options
+	 *
+	 * @return array|string|null
+	 */
+	public function get_language_options() {
+		return $this->options['language_options'];
+	}
+
+	/**
+	 * Set previous response ID for sequential validation
+	 *
+	 * @param string $response_id Previous response ID
+	 *
+	 * @return self
+	 */
+	public function set_previous_response( string $response_id ): self {
+		$this->options['previous_response'] = $response_id;
+
+		return $this;
+	}
+
+	/**
+	 * Get current previous response ID
+	 *
+	 * @return string|null
+	 */
+	public function get_previous_response(): ?string {
+		return $this->options['previous_response'];
+	}
+
+	/**
+	 * Set session token for billing purposes
+	 *
+	 * @param string $token Session token
+	 *
+	 * @return self
+	 */
+	public function set_session_token( string $token ): self {
+		$this->options['session_token'] = $token;
+
+		return $this;
+	}
+
+	/**
+	 * Get current session token
+	 *
+	 * @return string|null
+	 */
+	public function get_session_token(): ?string {
+		return $this->options['session_token'];
+	}
+
+	/**
+	 * Reset all validation options to defaults
+	 *
+	 * @return self
+	 */
+	public function reset_options(): self {
+		$this->options = [
+			'enable_usps'       => false,
+			'language_options'  => null,
+			'previous_response' => null,
+			'session_token'     => null
+		];
+
+		return $this;
+	}
+
+	/**
+	 * Get current validation options
+	 *
+	 * @return array Current options
+	 */
+	public function get_options(): array {
+		return $this->options;
+	}
+
+	/**
 	 * Validate an address
 	 *
-	 * @param string|array $address           Address to validate (string or array of components)
-	 * @param array        $options           Additional options for validation
-	 * @param string|null  $previous_response Previous response ID for sequential validation
-	 * @param string|null  $session_token     Session token for billing purposes
+	 * @param string|array $address Address to validate (string or array of components)
+	 * @param array        $options Additional options for validation (optional, overrides instance options)
 	 *
 	 * @return Response|WP_Error Response object or WP_Error on failure
 	 */
-	public function validate( $address, array $options = [], ?string $previous_response = null, ?string $session_token = null ) {
+	public function validate( $address, array $options = [] ) {
+		// Merge instance options with provided options, with provided options taking precedence
+		$final_options = array_merge( $this->options, $options );
+
 		// Prepare the request body
 		$body = [
 			'address' => $this->prepare_address( $address )
 		];
 
 		// Add optional parameters
-		if ( $previous_response ) {
-			$body['previousResponseId'] = $previous_response;
+		if ( ! empty( $final_options['previous_response'] ) ) {
+			$body['previousResponseId'] = $final_options['previous_response'];
 		}
 
-		if ( isset( $options['enable_usps'] ) ) {
-			$body['enableUspsCass'] = (bool) $options['enable_usps'];
+		if ( isset( $final_options['enable_usps'] ) ) {
+			$body['enableUspsCass'] = (bool) $final_options['enable_usps'];
 		}
 
-		if ( isset( $options['language_options'] ) ) {
-			$body['languageOptions'] = $options['language_options'];
+		if ( ! empty( $final_options['language_options'] ) ) {
+			$body['languageOptions'] = $final_options['language_options'];
 		}
 
-		if ( $session_token ) {
-			$body['sessionToken'] = $session_token;
+		if ( ! empty( $final_options['session_token'] ) ) {
+			$body['sessionToken'] = $final_options['session_token'];
 		}
 
 		// Generate cache key if caching is enabled
