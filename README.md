@@ -5,6 +5,7 @@ A PHP library for integrating with the Google Address Validation API in WordPres
 ## Features
 
 - ✅ **Address Validation**: Verify and standardize addresses globally
+- 📊 **Validation Scoring**: Get numerical scores (0-100) and ratings for address quality
 - 🏠 **Detailed Components**: Access all address components and metadata
 - 📫 **USPS Support**: Enhanced validation for US addresses with USPS data
 - 🌍 **International**: Support for addresses worldwide with region code handling
@@ -40,6 +41,11 @@ $client = new Client( 'your-google-api-key' );
 // Validate an address
 $result = $client->validate( '1600 Amphitheatre Parkway, Mountain View, CA' );
 if ( ! is_wp_error( $result ) ) {
+    // Get validation score and rating
+    $score = $result->get_score();
+    $rating = $result->get_rating();
+    echo "Validation Score: {$score}/100 ({$rating})\n";
+    
     // Check if address is verified
     if ( $result->is_verified() ) {
         // Get standardized address
@@ -54,6 +60,48 @@ if ( ! is_wp_error( $result ) ) {
     }
 }
 ```
+
+## Validation Scoring
+
+The library provides a comprehensive scoring system to assess address quality:
+
+```php
+$result = $client->validate( '1600 Amphitheatre Parkway, Mountain View, CA' );
+if ( ! is_wp_error( $result ) ) {
+    // Get numerical score (0-100)
+    $score = $result->get_score();
+    
+    // Get human-readable rating
+    $rating = $result->get_rating(); // Returns: Excellent, Good, Fair, or Poor
+    
+    // Example score interpretation
+    switch (true) {
+        case $score >= 90:
+            echo "Excellent - Highly reliable address\n";
+            break;
+        case $score >= 75:
+            echo "Good - Reliable address with minor issues\n";
+            break;
+        case $score >= 50:
+            echo "Fair - Address may need verification\n";
+            break;
+        default:
+            echo "Poor - Address needs significant verification\n";
+    }
+}
+```
+
+### Score Components
+
+The validation score considers multiple factors:
+- Address completeness (30 points)
+- Confirmed components (20 points)
+- No inferred components (15 points)
+- No replaced components (10 points)
+- Geocoding data (10 points)
+- Postal code presence (5 points)
+- Precise location (5 points)
+- USPS validation (5 bonus points for US addresses)
 
 ## Extended Examples
 
@@ -128,6 +176,8 @@ $client->clear_cache();
 ### Response Methods
 
 #### Validation Methods
+* `get_score()`: Get numerical validation score (0-100)
+* `get_rating()`: Get human-readable validation rating
 * `check_validity()`: Get detailed validation analysis
 * `is_fully_validated()`: Check if address is completely validated
 * `is_high_confidence()`: Check if address has high confidence validation
@@ -184,13 +234,13 @@ if ( ! is_wp_error( $result ) ) {
 
 ## Use Cases
 
-* **Address Verification**: Validate customer addresses
+* **Address Verification**: Validate customer addresses with confidence scores
 * **Data Standardization**: Standardize address data
 * **USPS Integration**: Enhanced US address validation
 * **Fraud Prevention**: Verify address authenticity
 * **International Support**: Validate global addresses
 * **Business Verification**: Identify business locations
-* **Data Quality**: Maintain clean address data
+* **Data Quality**: Assess and maintain address data quality with numerical metrics
 * **Location Services**: Support location-based features
 
 ## Contributing
