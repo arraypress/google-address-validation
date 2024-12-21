@@ -37,7 +37,7 @@ class Client {
 	 * @param bool   $enable_cache     Whether to enable caching (default: true)
 	 * @param int    $cache_expiration Cache expiration in seconds (default: 24 hours)
 	 */
-	public function __construct( string $api_key, bool $enable_cache = true, int $cache_expiration = 86400 ) {
+	public function __construct( string $api_key, bool $enable_cache = true, int $cache_expiration = DAY_IN_SECONDS ) {
 		$this->set_api_key( $api_key );
 		$this->set_cache_enabled( $enable_cache );
 		$this->set_cache_expiration( $cache_expiration );
@@ -148,7 +148,7 @@ class Client {
 	 * @return array|WP_Error Response array or WP_Error on failure
 	 */
 	private function make_request( array $body ) {
-		$url = add_query_arg( [ 'key' => $this->api_key ], self::API_ENDPOINT );
+		$url = add_query_arg( [ 'key' => $this->get_api_key() ], self::API_ENDPOINT );
 
 		$response = wp_remote_post( $url, [
 			'timeout' => 15,
