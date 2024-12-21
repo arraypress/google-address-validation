@@ -21,13 +21,7 @@ use WP_Error;
  * A comprehensive utility class for interacting with the Google Address Validation API.
  */
 class Client {
-
-	/**
-	 * API key for Google Address Validation
-	 *
-	 * @var string
-	 */
-	private string $api_key;
+	use Parameters;
 
 	/**
 	 * Base URL for the Address Validation API
@@ -37,32 +31,6 @@ class Client {
 	private const API_ENDPOINT = 'https://addressvalidation.googleapis.com/v1:validateAddress';
 
 	/**
-	 * Whether to enable response caching
-	 *
-	 * @var bool
-	 */
-	private bool $enable_cache;
-
-	/**
-	 * Cache expiration time in seconds
-	 *
-	 * @var int
-	 */
-	private int $cache_expiration;
-
-	/**
-	 * Validation options
-	 *
-	 * @var array
-	 */
-	private array $options = [
-		'enable_usps'       => false,
-		'language_options'  => null,
-		'previous_response' => null,
-		'session_token'     => null
-	];
-
-	/**
 	 * Initialize the Address Validation client
 	 *
 	 * @param string $api_key          API key for Google Address Validation
@@ -70,191 +38,9 @@ class Client {
 	 * @param int    $cache_expiration Cache expiration in seconds (default: 24 hours)
 	 */
 	public function __construct( string $api_key, bool $enable_cache = true, int $cache_expiration = 86400 ) {
-		$this->api_key          = $api_key;
-		$this->enable_cache     = $enable_cache;
-		$this->cache_expiration = $cache_expiration;
-	}
-
-	/**
-	 * Set API key
-	 *
-	 * @param string $api_key The API key to use
-	 *
-	 * @return self
-	 */
-	public function set_api_key( string $api_key ): self {
-		$this->api_key = $api_key;
-
-		return $this;
-	}
-
-	/**
-	 * Get API key
-	 *
-	 * @return string
-	 */
-	public function get_api_key(): string {
-		return $this->api_key;
-	}
-
-	/**
-	 * Set cache status
-	 *
-	 * @param bool $enable Whether to enable caching
-	 *
-	 * @return self
-	 */
-	public function set_cache_enabled( bool $enable ): self {
-		$this->enable_cache = $enable;
-
-		return $this;
-	}
-
-	/**
-	 * Get cache status
-	 *
-	 * @return bool
-	 */
-	public function is_cache_enabled(): bool {
-		return $this->enable_cache;
-	}
-
-	/**
-	 * Set cache expiration time
-	 *
-	 * @param int $seconds Cache expiration time in seconds
-	 *
-	 * @return self
-	 */
-	public function set_cache_expiration( int $seconds ): self {
-		$this->cache_expiration = $seconds;
-
-		return $this;
-	}
-
-	/**
-	 * Get cache expiration time in seconds
-	 *
-	 * @return int
-	 */
-	public function get_cache_expiration(): int {
-		return $this->cache_expiration;
-	}
-
-	/**
-	 * Enable or disable USPS CASS validation
-	 *
-	 * @param bool $enable Whether to enable USPS CASS validation
-	 *
-	 * @return self
-	 */
-	public function set_usps( bool $enable = true ): self {
-		$this->options['enable_usps'] = $enable;
-
-		return $this;
-	}
-
-	/**
-	 * Check if USPS CASS validation is enabled
-	 *
-	 * @return bool
-	 */
-	public function get_usps(): bool {
-		return (bool) $this->options['enable_usps'];
-	}
-
-	/**
-	 * Set language options for validation
-	 *
-	 * @param array|string $options Language options array or language code
-	 *
-	 * @return self
-	 */
-	public function set_language_options( $options ): self {
-		if ( is_string( $options ) ) {
-			$options = [ 'languageCode' => $options ];
-		}
-		$this->options['language_options'] = $options;
-
-		return $this;
-	}
-
-	/**
-	 * Get current language options
-	 *
-	 * @return array|string|null
-	 */
-	public function get_language_options() {
-		return $this->options['language_options'];
-	}
-
-	/**
-	 * Set previous response ID for sequential validation
-	 *
-	 * @param string $response_id Previous response ID
-	 *
-	 * @return self
-	 */
-	public function set_previous_response( string $response_id ): self {
-		$this->options['previous_response'] = $response_id;
-
-		return $this;
-	}
-
-	/**
-	 * Get current previous response ID
-	 *
-	 * @return string|null
-	 */
-	public function get_previous_response(): ?string {
-		return $this->options['previous_response'];
-	}
-
-	/**
-	 * Set session token for billing purposes
-	 *
-	 * @param string $token Session token
-	 *
-	 * @return self
-	 */
-	public function set_session_token( string $token ): self {
-		$this->options['session_token'] = $token;
-
-		return $this;
-	}
-
-	/**
-	 * Get current session token
-	 *
-	 * @return string|null
-	 */
-	public function get_session_token(): ?string {
-		return $this->options['session_token'];
-	}
-
-	/**
-	 * Reset all validation options to defaults
-	 *
-	 * @return self
-	 */
-	public function reset_options(): self {
-		$this->options = [
-			'enable_usps'       => false,
-			'language_options'  => null,
-			'previous_response' => null,
-			'session_token'     => null
-		];
-
-		return $this;
-	}
-
-	/**
-	 * Get current validation options
-	 *
-	 * @return array Current options
-	 */
-	public function get_options(): array {
-		return $this->options;
+		$this->set_api_key( $api_key );
+		$this->set_cache_enabled( $enable_cache );
+		$this->set_cache_expiration( $cache_expiration );
 	}
 
 	/**
@@ -266,8 +52,8 @@ class Client {
 	 * @return Response|WP_Error Response object or WP_Error on failure
 	 */
 	public function validate( $address, array $options = [] ) {
-		// Merge instance options with provided options, with provided options taking precedence
-		$final_options = array_merge( $this->options, $options );
+		// Merge instance options with provided options
+		$final_options = array_merge( $this->get_all_options(), $options );
 
 		// Prepare the request body
 		$body = [
@@ -292,8 +78,7 @@ class Client {
 		}
 
 		// Generate cache key if caching is enabled
-		$cache_key = null;
-		if ( $this->enable_cache ) {
+		if ( $this->is_cache_enabled() ) {
 			$cache_key   = $this->get_cache_key( wp_json_encode( $body ) );
 			$cached_data = get_transient( $cache_key );
 			if ( false !== $cached_data ) {
@@ -308,8 +93,8 @@ class Client {
 		}
 
 		// Cache the response if caching is enabled
-		if ( $this->enable_cache && $cache_key ) {
-			set_transient( $cache_key, $response, $this->cache_expiration );
+		if ( $this->is_cache_enabled() ) {
+			set_transient( $cache_key, $response, $this->get_cache_expiration() );
 		}
 
 		return new Response( $response );
@@ -405,7 +190,6 @@ class Client {
 			);
 		}
 
-		// Check for API errors
 		if ( isset( $data['error'] ) ) {
 			return new WP_Error(
 				'api_error',
