@@ -13,6 +13,7 @@ declare( strict_types=1 );
 
 namespace ArrayPress\Google\AddressValidation;
 
+use ArrayPress\Google\AddressValidation\Traits\Parameters;
 use WP_Error;
 
 /**

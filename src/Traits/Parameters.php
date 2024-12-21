@@ -11,7 +11,9 @@
 
 declare( strict_types=1 );
 
-namespace ArrayPress\Google\AddressValidation;
+namespace ArrayPress\Google\AddressValidation\Traits;
+
+use WP_Error;
 
 /**
  * Trait Parameters
@@ -104,9 +106,15 @@ trait Parameters {
 	 *
 	 * @param int $seconds Cache expiration time in seconds
 	 *
-	 * @return self
+	 * @return self|WP_Error
 	 */
-	public function set_cache_expiration( int $seconds ): self {
+	public function set_cache_expiration( int $seconds ) {
+		if ( $seconds < 0 ) {
+			return new WP_Error(
+				'invalid_expiration',
+				__( 'Cache expiration time cannot be negative', 'arraypress' )
+			);
+		}
 		$this->cache_settings['expiration'] = $seconds;
 
 		return $this;
